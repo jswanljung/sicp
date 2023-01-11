@@ -9,7 +9,7 @@
   (lambda (x) (average x (f x))))
 
 (define tolerance 0.00001)
-(define (fixed-point f first-guess)
+#;(define (fixed-point f first-guess)
   (define (close-enough? v1 v2)
     (< (abs (- v1 v2)) tolerance))
   (define (try guess)
@@ -25,7 +25,7 @@
 
 ;(sqrt 2)
 
-(define (cube-root x)
+(define (m x)
   (fixed-point (average-damp (lambda (y) (/ x (square y))))
                1.0))
 
@@ -50,7 +50,7 @@
 (define (newtons-method g guess)
   (fixed-point (newton-transform g) guess))
 
-(define (sqrt x)
+#;(define (sqrt x)
   (newtons-method (lambda (y) (- (square y) x)) 1.0))
 
 (sqrt 2)
@@ -92,3 +92,46 @@
 
 (define (n-fold-smoothed f n)
   ((repeated smooth n) f))
+
+
+; 1.45
+(define (nth-root x n)
+  (let ((damp-times (if (< n 2) ; This is unnecessary, n < 2 makes no sense
+    1
+    (floor (log n 2))))) ; seems to increase every time we reach power of 2
+  (fixed-point 
+  ((repeated average-damp damp-times)
+  (lambda (y) (/ x (expt y (- n 1)))))
+  1.0)))
+
+(nth-root 2.0 2)
+(nth-root 27.0 3)
+(nth-root 16 4)
+(nth-root 34 5)
+(nth-root 83 8)
+
+; 1.46
+; This happens to be nearly identical to the "most improved"
+; version at http://community.schemewiki.org/?sicp-ex-1.46
+(define (iterative-improve good-enough? improve)
+  (define (ii guess) (if (good-enough? guess) 
+    guess
+    (ii (improve guess))))
+    ii)
+
+(define (sqrt x) 
+  ((iterative-improve 
+    (lambda (guess) (< (abs (- (square guess) x)) 0.001))
+    (lambda (guess) (average guess (/ x guess)))) 1.0))
+
+(sqrt 100)
+
+
+; Here we have to calculate the next value twice. I see no way around
+; this without modifying iterative-improve, which is what they do
+; here: https://sicp-solutions.net/post/sicp-solution-exercise-1-46/
+; http://community.schemewiki.org/?sicp-ex-1.46 does it like I did
+(define (fixed-point f first-guess)
+  ((iterative-improve
+    (lambda (guess) (< (abs (guess - (f guess) tolerance))))))
+    f)
