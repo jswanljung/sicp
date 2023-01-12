@@ -88,3 +88,62 @@
 (define mysegment (make-segment (make-point 3.0 2) (make-point -8 -1.0)))
 (print-point (midpoint-segment mysegment))
 
+; 2.3
+; Two representations
+; segment and width
+; length width rotation angle midpoint
+; a way to get points
+
+(define (rotate-point point angle)
+    (define (deg2rad a) (/ (* pi a) 180))
+    (let ((sine (sin (deg2rad angle)))
+        (cosine (cos (deg2rad angle)))
+        (x (x-point point))
+        (y (y-point point)))
+    (make-point (+ (* cosine x) (* -1 sine y))
+        (+ (* sine x) (* cosine y)))))
+(define p (make-point (/ 1 2) (/ (sqrt 3) 2)))
+(print-point (rotate-point p 30))
+
+(define (half a) (/ a 2))
+
+(define (perimeter rect) 
+    (* (+ (width rect) (height rect)) 2))
+(define (area rect) 
+    (* (width rect) (height rect)))
+(define (square x) (* x x))
+(define (distance p1 p2)
+    (sqrt (+ 
+        (square (- (x-point p1) (x-point p2)))
+        (square (- (y-point p1) (y-point p2))))))
+(define (seg-length segment)
+    (distance (start-segment segment) (end-segment segment)))
+
+; First representation
+#|
+(define (rectangle side width)
+    (cons side width))
+(define (side rect)
+    (car rect))
+(define (width rect)
+    (cdr rect))
+(define (height rect)
+    (seg-length (side rect)))
+    
+(define r1 (rectangle (make-segment(make-point 1 2) 
+    (make-point 4 6)) 7))
+|#
+
+; Second representation
+(define (rectangle midpoint angle height width)
+  (cons (cons midpoint angle) (cons height width)))
+
+(define (width rect)
+  (cdr (cdr rect)))
+(define (height rect)
+  (car (cdr rect)))
+
+(define r1 (rectangle (make-point 3 2) 45 5 7))
+
+(area r1)
+(perimeter r1)
