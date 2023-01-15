@@ -136,3 +136,23 @@
 (display-interval (mul-interval x y))
 (display-interval (mul-interval zero-interval (make-interval -3.0 1.0)))
 (display-interval zero-interval)
+
+
+(define (make-center-width c w)
+  (make-interval (- c w) (+ c w)))
+(define (center i)
+  (/ (+ (lower-bound i) (upper-bound i)) 2))
+(define (width i)
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
+; 2.12
+(define (make-center-percent c p)
+  (let ((dc (* c p 0.01)))
+    (make-interval (- c dc) (+ c dc))))
+
+(define (percent i)
+  (* (/ (width i) (center i)) 100))
+
+(display-interval (make-center-percent 100 5))
+(percent x)
+(display-interval x)
