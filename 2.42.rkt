@@ -24,17 +24,23 @@
 (define (queens board-size)
   (define empty-board nil)
   (define (adjoin-position row col positions)
-    (cons (list col row) positions))
+    (cons (list row col) positions))
   (define (safe? k positions)
-    (if (< k 2)
-        true
-        (let ((kth (car (cdr (car positions))))
-              (adjacent (car (cdr (car (cdr positions))))))
-          (and (< 1 (abs (- kth adjacent)))
-          (accumulate (lambda (pos rest) (and  (not (= kth (car (cdr pos)))) rest))
-                      true
-                      (cdr positions))))))
-    
+    (define (row pos)
+      (car pos))
+    (define (col pos)
+      (cadr pos))
+    (if (< k 2) true
+        (let ((kth (car positions))
+              (rest (cdr positions)))
+          (accumulate (lambda (x y)
+                        (and
+                         (not (= (row kth) (row x)))
+                         (not (= (abs (- (row kth) (row x))) (- k (col x))))
+                         y))
+                        true
+                        rest))))
+
   (define (queen-cols k)  
     (if (= k 0)
         (list empty-board)
@@ -47,7 +53,12 @@
                  (enumerate-interval 1 board-size)))
           (queen-cols (- k 1))))))
   (queen-cols board-size))
+
+
 (define (length seq)
   (accumulate (lambda (x y) (+ 1 y)) 0 seq))
 (length (queens 8))
-(queens 5)
+(length (queens 6))
+(length (queens 9))
+(length (queens 10))
+(length (queens 7))
