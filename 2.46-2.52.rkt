@@ -1,33 +1,23 @@
-#lang sicp 
-(#%require 2htdp/image)
-(#%require lang/posn)
-(#%require racket/base)
-; Stuff at the beginning is from here: https://stackoverflow.com/questions/13592352/compiling-sicp-picture-exercises-in-drracket
-(define *current-image* empty-image)  
+#lang racket
+(require (prefix-in r: racket/draw))
+(require racket/gui)
 
-(define (*new-image* new-frame)
-  (define (xy->posn x y)
-    (let ((v ((frame-coord-map new-frame) (make-vect x y))))
-      (make-posn (xcor-vect v) (ycor-vect v))))
-  (set! *current-image*
-        (polygon
-         (list
-          (xy->posn 0 0)
-          (xy->posn 0 1)
-          (xy->posn 1 1)
-          (xy->posn 1 0))
-         "solid"
-         "white")))  
+(define *target* '())
+(define *current-dc* '())  
+
+(define (*new-image*)
+  (define target (r:make-bitmap 300 300)) 
+  (define dc (new r:bitmap-dc% [bitmap target]))
+  (set! *current-dc* dc)
+  (set! *target* target))
+
 
 (define (draw-line start end)
-    (set! *current-image*
-        (add-line
-         *current-image*
+    (send *current-dc* draw-line
          (xcor-vect start)
          (ycor-vect start)
          (xcor-vect end)
-         (ycor-vect end)
-         "black")))
+         (ycor-vect end)))
 #;(define (drawme)
   (define me (scale 0.5 (bitmap "johan.jpg")))
   (*new-image* (make-frame (make-vect 0 150)
@@ -38,17 +28,17 @@
   *current-image*)
 
 (define (paint-in-frame painter frame)
-    (*new-image* frame)
+    (*new-image*)
     (painter frame)
-    *current-image*)  
+    (make-object image-snip% *target*))
 
 (define (paint painter)
     (paint-in-frame
         painter
         (make-frame
-            (make-vect 0 150)
-            (make-vect 150 0)
-            (make-vect 0 -150))))
+            (make-vect 0 300)
+            (make-vect 300 0)
+            (make-vect 0 -300))))
 
 (define (frame-coord-map frame)
   (lambda (v)
@@ -112,7 +102,13 @@
         ((frame-coord-map frame) (end-segment segment))))
      segment-list)))
 
+(define (bitmap->painter filename)
+  (define source (r:read-bitmap filename))
+  (lambda (frame)
+    (send *current-dc* draw-bitmap source 0 0)))
+(define drawme (bitmap->painter "johan.jpg"))
 
+(paint drawme)
 
 ;2.48
 (define (make-segment start end)
