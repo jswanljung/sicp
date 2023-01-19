@@ -27,7 +27,15 @@
          (ycor-vect start)
          (xcor-vect end)
          (ycor-vect end)
-         "black")))  
+         "black")))
+#;(define (drawme)
+  (define me (scale 0.5 (bitmap "johan.jpg")))
+  (*new-image* (make-frame (make-vect 0 150)
+                           (make-vect 150 0)
+                           (make-vect 150 0)))
+  (set! *current-image*
+        me)
+  *current-image*)
 
 (define (paint-in-frame painter frame)
     (*new-image* frame)
