@@ -4,10 +4,13 @@
 
 (define *target* '())
 (define *current-dc* '())  
+(define image-size 300)
 
 (define (*new-image*)
-  (define target (r:make-bitmap 300 300)) 
+  (define target (r:make-bitmap image-size image-size)) 
   (define dc (new r:bitmap-dc% [bitmap target]))
+  (send dc scale image-size image-size)
+  (send dc set-pen "black" 0 'solid)
   (set! *current-dc* dc)
   (set! *target* target))
 
@@ -36,9 +39,9 @@
     (paint-in-frame
         painter
         (make-frame
-            (make-vect 0 300)
-            (make-vect 300 0)
-            (make-vect 0 -300))))
+            (make-vect 0 1)
+            (make-vect 1 0)
+            (make-vect 0 -1))))
 
 (define (frame-coord-map frame)
   (lambda (v)
@@ -104,11 +107,25 @@
 
 (define (bitmap->painter filename)
   (define source (r:read-bitmap filename))
+  (define xscale (/ 1 (send source get-width)))
+  (define yscale (/ 1 (send source get-height)))
   (lambda (frame)
-    (send *current-dc* draw-bitmap source 0 0)))
+    (let ((itransform (send *current-dc* get-transformation))
+          (x0 (xcor-vect (origin-frame frame)))
+          (y0 (ycor-vect (origin-frame frame)))
+          (edge1x (xcor-vect (edge1-frame frame)))
+          (edge1y (ycor-vect (edge1-frame frame)))
+          (edge2x (xcor-vect (edge2-frame frame)))
+          (edge2y (ycor-vect (edge2-frame frame))))
+    
+    (send *current-dc* transform (vector edge1x edge2x edge1y (* -1 edge2y) x0 y0))
+      (send *current-dc* scale xscale yscale)
+    (send *current-dc* draw-bitmap source 0 0)
+    (send *current-dc* set-transformation itransform))))
 (define drawme (bitmap->painter "johan.jpg"))
 
 (paint drawme)
+
 
 ;2.48
 (define (make-segment start end)
@@ -288,3 +305,5 @@
              (rotate-270 painter2))))
 (paint (below wave x))
 (paint (below2 wave x))
+
+(paint (below drawme drawme))
