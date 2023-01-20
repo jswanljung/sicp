@@ -4,11 +4,12 @@
 
 (define *target* '())
 (define *current-dc* '())  
-(define image-size 300)
+(define image-size 500)
 
 (define (*new-image*)
   (define target (r:make-bitmap image-size image-size)) 
   (define dc (new r:bitmap-dc% [bitmap target]))
+  (send dc set-smoothing 'smoothed)
   (send dc scale image-size image-size)
   (send dc set-pen "black" 0 'solid)
   (set! *current-dc* dc)
@@ -39,9 +40,9 @@
     (paint-in-frame
         painter
         (make-frame
-            (make-vect 0 1)
-            (make-vect 1 0)
-            (make-vect 0 -1))))
+            (make-vect 0 1.0)
+            (make-vect 1.0 0)
+            (make-vect 0 -1.0))))
 
 (define (frame-coord-map frame)
   (lambda (v)
@@ -91,10 +92,10 @@
   (cddr frame))
   
 
-(define myframe (make-frame (make-vect 1 2) (make-vect 3 2) (make-vect 2 -3)))
-(origin-frame myframe)
-(edge1-frame myframe)
-(edge2-frame myframe)
+;(define myframe (make-frame (make-vect 1 2) (make-vect 3 2) (make-vect 2 -3)))
+;(origin-frame myframe)
+;(edge1-frame myframe)
+;(edge2-frame myframe)
 
 (define (segments->painter segment-list)
   (lambda (frame)
@@ -107,8 +108,8 @@
 
 (define (bitmap->painter filename)
   (define source (r:read-bitmap filename))
-  (define xscale (/ 1 (send source get-width)))
-  (define yscale (/ 1 (send source get-height)))
+  (define xscale (/ 1.0 (- (send source get-width) 4)))
+  (define yscale (/ 1.0 (- (send source get-height) 4)))
   (lambda (frame)
     (let ((itransform (send *current-dc* get-transformation))
           (x0 (xcor-vect (origin-frame frame)))
@@ -117,14 +118,19 @@
           (edge1y (ycor-vect (edge1-frame frame)))
           (edge2x (xcor-vect (edge2-frame frame)))
           (edge2y (ycor-vect (edge2-frame frame))))
-    
-    (send *current-dc* transform (vector edge1x edge2x edge1y (* -1 edge2y) x0 y0))
+    ;(displayln edge2y)
+     ; (displayln y0)
+      ; In the following we need to correct for the fact that the origin point of an image is 
+      ; is in the upper left
+      
+      
+    (send *current-dc* transform (vector edge1x (* -1 edge2x) (* 1 edge1y) (* -1 edge2y) (+ x0 edge2x) (+ y0  edge2y)))
       (send *current-dc* scale xscale yscale)
     (send *current-dc* draw-bitmap source 0 0)
     (send *current-dc* set-transformation itransform))))
 (define drawme (bitmap->painter "johan.jpg"))
 
-(paint drawme)
+;(paint drawme)
 
 
 ;2.48
@@ -146,7 +152,7 @@
                                 (make-vect 0.0 1.0))
                   (make-segment (make-vect 0.0 1.0)
                                 (make-vect 0.0 0.0)))))
-(paint outline)
+;(paint outline)
 ; b
 (define x (segments->painter
            (list
@@ -155,7 +161,7 @@
             (make-segment (make-vect 0.0 1.0)
                           (make-vect 1.0 0.0)))))
 
-(paint x)
+;(paint x)
 
 ;c
 (define diamond (segments->painter
@@ -169,7 +175,7 @@
                   (make-segment (make-vect 0 0.5)
                                 (make-vect 0.5 0)))))
 
-(paint diamond)
+;(paint diamond)
 
 (define (points->segments sequence)
   (if (null? (cdr sequence))
@@ -196,7 +202,7 @@
 
 
 (define wave (segments->painter wavepoints))
-(paint wave)
+;(paint wave)
 ;(paint-in-frame x (make-frame (make-vect 0 0) (make-vect 100.0 0.0) (make-vect 100.0 100.0))
 
 (define (transform-painter painter origin corner1 corner2)
@@ -220,8 +226,8 @@
                      (make-vect 1.0 0.5)
                      (make-vect 0.5 1.0)))
 
-(paint (shrink-to-upper-right wave))
-(paint (flip-vert wave))
+;(paint (shrink-to-upper-right wave))
+;(paint (flip-vert wave))
 
 (define (rotate90 painter)
   (transform-painter painter
@@ -229,7 +235,7 @@
                      (make-vect 1.0 1.0)
                      (make-vect 0.0 0.0)))
 
-(paint (rotate90 wave))
+;(paint (rotate90 wave))
 
 (define (squash-inwards painter)
   (transform-painter painter
@@ -237,7 +243,7 @@
                      (make-vect 0.65 0.35)
                      (make-vect 0.35 0.65)))
 
-(paint (squash-inwards wave))
+;(paint (squash-inwards wave))
 
 (define (beside painter1 painter2)
   (let ((split-point (make-vect 0.5 0.0)))
@@ -255,15 +261,15 @@
         (paint-left frame)
         (paint-right frame)))))
 
-(paint (beside wave wave))
+;(paint (beside wave wave))
 ;2.50
 (define (flip-horiz painter)
     (transform-painter painter
-                     (make-vect 0.0 1.0)   ; new origin
-                     (make-vect 1.0 1.0)   ; new end of edge1
-                     (make-vect 0.0 0.0))) ; new end of edge2
+                     (make-vect 1.0 0.0)   ; new origin
+                     (make-vect 0.0 0.0)   ; new end of edge1
+                     (make-vect 1.0 1.0))) ; new end of edge2
 
-(paint (flip-horiz wave))
+;(paint (flip-horiz wave))
 
 (define (rotate-180 painter)
     (transform-painter painter
@@ -271,18 +277,18 @@
                      (make-vect 0.0 1.0)   ; new end of edge1
                      (make-vect 1.0 0.0))) ; new end of edge2
 
-(paint (rotate-180 wave))
+;(paint (rotate-180 wave))
 
 (define (rotate-270 painter)
     (transform-painter painter
                      (make-vect 0.0 1.0)   ; new origin
                      (make-vect 0.0 0.0)   ; new end of edge1
                      (make-vect 1.0 1.0))) ; new end of edge2
-(paint (rotate-270 wave))
+;(paint (rotate-270 wave))
 
 ;2.51
 
- (define (below painter1 painter2)
+ #;(define (below painter1 painter2)
   (let ((split-point (make-vect 0.0 0.5)))
     (let ((paint-below
            (transform-painter painter1
@@ -299,11 +305,67 @@
         (paint-below frame)))))
 
 ; version 2
-(define (below2 painter1 painter2)
+(define (below painter1 painter2)
   (rotate90 (beside
              (rotate-270 painter1)
              (rotate-270 painter2))))
-(paint (below wave x))
-(paint (below2 wave x))
+;(paint (below wave x))
+;(paint (below2 wave x))
 
-(paint (below drawme drawme))
+;(paint (below wave drawme))
+;(paint (below drawme wave))
+
+;(paint (beside wave drawme))
+;(paint (beside drawme wave))
+#;(define (flipped-pairs painter)
+  (let ((painter2 (beside painter (flip-vert painter))))
+    (below painter2 painter2)))
+
+(define (split op1 op2)
+  (define (splitter painter n)
+      (if (= n 0)
+      painter
+      (let ((smaller (splitter painter (- n 1))))
+        (op1 painter (op2 smaller smaller)))))
+  splitter)
+
+(define right-split (split beside below))
+(define up-split (split below beside))
+
+(define (corner-split painter n)
+  (if (= n 0)
+      painter
+      (let ((up (up-split painter (- n 1)))
+            (right (right-split painter (- n 1))))
+        (let ((top-left (beside up up))
+              (bottom-right (below right right))
+              (corner (corner-split painter (- n 1))))
+          (beside (below painter top-left)
+                  (below bottom-right corner))))))
+
+;(paint (corner-split drawme 8))
+;(paint (squash-inwards drawme))
+;(paint (squash-inwards wave))
+;(paint (shrink-to-upper-right drawme))
+
+(define (square-of-four tl tr bl br)
+  (lambda (painter)
+    (let ((top (beside (tl painter) (tr painter)))
+          (bottom (beside (bl painter) (br painter))))
+      (below bottom top))))
+
+(define (flipped-pairs painter)
+  (let ((combine4 (square-of-four identity flip-vert
+                                  identity flip-vert)))
+    (combine4 painter)))
+
+(define (square-limit painter n)
+  (let ((combine4 (square-of-four flip-horiz identity
+                                  rotate-180 flip-vert)))
+    (combine4 (corner-split painter n))))
+
+(paint (square-limit diamond 6))
+;(paint (flip-horiz wave))
+(paint (beside drawme drawme))
+(paint (corner-split drawme 2))
+(paint (square-limit drawme 5))
