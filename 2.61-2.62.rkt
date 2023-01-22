@@ -1,0 +1,52 @@
+#lang sicp
+
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((= x (car set)) true)
+        ((< x (car set)) false)
+        (else (element-of-set? x (cdr set)))))
+
+(define (intersection-set set1 set2)
+  (if (or (null? set1) (null? set2))
+      '()    
+      (let ((x1 (car set1)) (x2 (car set2)))
+        (cond ((= x1 x2)
+               (cons x1
+                     (intersection-set (cdr set1)
+                                       (cdr set2))))
+              ((< x1 x2)
+               (intersection-set (cdr set1) set2))
+              ((< x2 x1)
+               (intersection-set set1 (cdr set2)))))))
+
+(define (adjoin-set x set)
+  (if (null? set) (list x)
+      (let ((y (car set)))
+        (cond ((= x y) set)
+              ((> x y)
+               (cons y (adjoin-set x (cdr set))))
+              (else (cons x set))))))
+
+(define (union-set set1 set2)
+  (cond ((and (null? set1) (null? set2)) '())
+        ((null? set1) set2)
+        ((null? set2) set1)
+        (else (let ((x (car set1))
+                    (y (car set2)))
+                (cond ((= x y)
+                       (cons x (union-set (cdr set1)
+                                          (cdr set2))))
+                      ((< x y)
+                       (cons x (union-set (cdr set1) set2)))
+                      (else (cons y (union-set set1 (cdr set2)))))))))
+                                          
+                                          
+
+(define S '(2 3 5 7 9))
+(define T '(1 2 4 6 7))
+(adjoin-set 6 S)
+(adjoin-set 10 S)
+(adjoin-set 1 S)
+(adjoin-set 5 S)
+(intersection-set S T)
+(union-set S T)
