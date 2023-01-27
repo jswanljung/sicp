@@ -97,7 +97,7 @@
 
 ; New attempt
 
-(define (encode-symbol symbol tree)
+#;(define (encode-symbol symbol tree)
   (cond ((leaf? tree) '())
         ((memq symbol (symbols (left-branch tree)))
          (cons 0 (encode-symbol symbol (left-branch tree))))
@@ -105,7 +105,15 @@
          (cons 1 (encode-symbol symbol (right-branch tree))))
         (else (error "no match for symbol -- ENCODE SYMBOL" symbol))))
          
+(define (encode-symbol symbol tree)
+  (cond ((leaf? tree) '())
+         ((memq symbol (symbols (right-branch tree)))
+         (cons 1 (encode-symbol symbol (right-branch tree))))
+        ((memq symbol (symbols (left-branch tree)))
+         (cons 0 (encode-symbol symbol (left-branch tree))))
 
+        (else (error "no match for symbol -- ENCODE SYMBOL" symbol))))
+         
 (encode '(A D A B B C A) sample-tree)               
 
 ; 2.69
@@ -137,3 +145,51 @@
 (define encoded-song (encode song lyrics-tree))
 (length encoded-song)
 (* (length song) 3)
+
+(define (make-list n)
+  (define (iter i result)
+    (if (= i n) result
+      (iter (+ i 1) (cons (- n i) result))))
+  (iter 0 '()))
+
+(define (random-symbol i)
+  (define (random-char)
+  (integer->char (+ (random 26) 64)))
+  (string->symbol (apply string (map (lambda (x) (random-char)) (make-list i)))))
+
+(define (random-leaves symbol-size n)
+  (let ((nlist (make-list n)))
+    (let ((symbols (map (lambda (x) (random-symbol symbol-size)) nlist)))
+      (map (lambda (x y) (list x (expt 2 (- y 1)))) symbols nlist))))
+
+(define (timed-encode symbol-number iterations)
+  (define (last list)
+    (cond ((null? list) '())
+          ((null? (cdr list)) (car list))
+          (else (last (cdr list)))))
+  (let ((myleaves (random-leaves 10 symbol-number)))
+    (let ((big-tree (generate-huffman-tree myleaves))
+          (firstleaf (car myleaves))
+          (lastleaf (last myleaves)))
+  (define (timed-encode start-time symbol)
+    (define (iter i)
+      (if (> i iterations)
+          (begin (display (- (runtime) start-time))
+          (newline))
+          (begin (encode-symbol symbol big-tree)
+                 (iter (+ i 1)))))
+    (iter 0))
+  (timed-encode (runtime) (car firstleaf))
+  (timed-encode (runtime) (car lastleaf)))))
+
+(timed-encode 100 5000)
+(timed-encode 200 5000)
+(timed-encode 300 5000)
+(timed-encode 400 5000)
+(timed-encode 500 5000)
+(timed-encode 600 5000)
+(timed-encode 700 5000)
+
+; The best case for highest frequency is O(1) but that depends on checking the right branch first,
+; otherwise we end up doing memq on a growing symbol list, which is O(n).
+; for the lowest frequency we have O(n).
