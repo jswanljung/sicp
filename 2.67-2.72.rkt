@@ -74,22 +74,22 @@
               (encode (cdr message) tree))))
 
 #;(define (encode-symbol symbol tree)
-  (define (check-branch branch)
-    (if (leaf? branch) (if (eq? symbol (symbol-leaf branch))
-                              'match
-                              'no-match)
-           (let ((l-result (check-branch (left-branch branch))))
-             (cond ((eq? l-result 'no-match)
-                    (let ((r-result (check-branch (right-branch branch))))
-                      (cond ((eq? r-result 'no-match) 'no-match)
-                            ((eq? r-result 'match) '(1))
-                            (else (cons 1 r-result)))))
-                   ((eq? l-result 'match) '(0))
-                   (else (cons 0 l-result))))))
-  (let ((tree-result (check-branch tree)))
-    (if (eq? tree-result 'no-match)
-        (error "no match for symbol -- ENCODE-SYMBOL" symbol)
-        tree-result)))
+    (define (check-branch branch)
+      (if (leaf? branch) (if (eq? symbol (symbol-leaf branch))
+                             'match
+                             'no-match)
+          (let ((l-result (check-branch (left-branch branch))))
+            (cond ((eq? l-result 'no-match)
+                   (let ((r-result (check-branch (right-branch branch))))
+                     (cond ((eq? r-result 'no-match) 'no-match)
+                           ((eq? r-result 'match) '(1))
+                           (else (cons 1 r-result)))))
+                  ((eq? l-result 'match) '(0))
+                  (else (cons 0 l-result))))))
+    (let ((tree-result (check-branch tree)))
+      (if (eq? tree-result 'no-match)
+          (error "no match for symbol -- ENCODE-SYMBOL" symbol)
+          tree-result)))
 
 ; My solution works, but I should have checked the symbols lists for the branches,
 ; I forgot they existed. Using that makes the code considerably simpler, see
@@ -98,23 +98,23 @@
 ; New attempt
 
 #;(define (encode-symbol symbol tree)
-  (cond ((leaf? tree) '())
-        ((memq symbol (symbols (left-branch tree)))
-         (cons 0 (encode-symbol symbol (left-branch tree))))
-        ((memq symbol (symbols (right-branch tree)))
-         (cons 1 (encode-symbol symbol (right-branch tree))))
-        (else (error "no match for symbol -- ENCODE SYMBOL" symbol))))
-         
+    (cond ((leaf? tree) '())
+          ((memq symbol (symbols (left-branch tree)))
+           (cons 0 (encode-symbol symbol (left-branch tree))))
+          ((memq symbol (symbols (right-branch tree)))
+           (cons 1 (encode-symbol symbol (right-branch tree))))
+          (else (error "no match for symbol -- ENCODE SYMBOL" symbol))))
+
 (define (encode-symbol symbol tree)
   (cond ((leaf? tree) '())
-         ((memq symbol (symbols (right-branch tree)))
+        ((memq symbol (symbols (right-branch tree)))
          (cons 1 (encode-symbol symbol (right-branch tree))))
         ((memq symbol (symbols (left-branch tree)))
          (cons 0 (encode-symbol symbol (left-branch tree))))
 
         (else (error "no match for symbol -- ENCODE SYMBOL" symbol))))
-         
-(encode '(A D A B B C A) sample-tree)               
+
+(encode '(A D A B B C A) sample-tree)
 
 ; 2.69
 
@@ -128,9 +128,9 @@
 ; There are lots of solutions here: http://community.schemewiki.org/?sicp-ex-2.69. The shortest (which
 ; I believe are correct) are nearly identical to mine.
 
- (define test-tree (generate-huffman-tree '((A 3) (B 5) (C 6) (D 6)))) 
-  
- (encode '(A B C D) test-tree)
+(define test-tree (generate-huffman-tree '((A 3) (B 5) (C 6) (D 6))))
+
+(encode '(A B C D) test-tree)
 
 ; 2.70
 (define lyrics-tree (generate-huffman-tree '((A 2) (NA 16) (BOOM 1) (SHA 3)
@@ -149,12 +149,12 @@
 (define (make-list n)
   (define (iter i result)
     (if (= i n) result
-      (iter (+ i 1) (cons (- n i) result))))
+        (iter (+ i 1) (cons (- n i) result))))
   (iter 0 '()))
 
 (define (random-symbol i)
   (define (random-char)
-  (integer->char (+ (random 26) 64)))
+    (integer->char (+ (random 26) 64)))
   (string->symbol (apply string (map (lambda (x) (random-char)) (make-list i)))))
 
 (define (random-leaves symbol-size n)
@@ -171,16 +171,16 @@
     (let ((big-tree (generate-huffman-tree myleaves))
           (firstleaf (car myleaves))
           (lastleaf (last myleaves)))
-  (define (timed-encode start-time symbol)
-    (define (iter i)
-      (if (> i iterations)
-          (begin (display (- (runtime) start-time))
-          (newline))
-          (begin (encode-symbol symbol big-tree)
-                 (iter (+ i 1)))))
-    (iter 0))
-  (timed-encode (runtime) (car firstleaf))
-  (timed-encode (runtime) (car lastleaf)))))
+      (define (timed-encode start-time symbol)
+        (define (iter i)
+          (if (> i iterations)
+              (begin (display (- (runtime) start-time))
+                     (newline))
+              (begin (encode-symbol symbol big-tree)
+                     (iter (+ i 1)))))
+        (iter 0))
+      (timed-encode (runtime) (car firstleaf))
+      (timed-encode (runtime) (car lastleaf)))))
 
 (timed-encode 100 5000)
 (timed-encode 200 5000)
