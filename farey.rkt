@@ -1,0 +1,21 @@
+#lang racket
+
+(define (closest-rational x)
+  (define max-denominator 99999999999)
+  (define margin (/ 1 max-denominator))
+  (define intpart (exact-floor x))
+  (define v (- x intpart))
+  (define (closest-iter a b c d)
+    (let ((e (+ a c))
+          (f (+ b d)))
+      (cond ((> f max-denominator)
+             (if (< (- v (/ a b)) (- (/ c d) v))
+                 (cons a b) (cons c d)))
+            ((< (abs  (- (/ e f) v)) margin)  (cons e f))
+            ((< (/ e f) v) (closest-iter e f c d))
+            (else (closest-iter a b e f)))))
+    (if (< v margin)
+        (cons intpart 1)
+        (let ((fracpart
+               (closest-iter 0 1 1 1)))
+          (cons (+ (* intpart (cdr fracpart)) (car fracpart)) (cdr fracpart)))))
